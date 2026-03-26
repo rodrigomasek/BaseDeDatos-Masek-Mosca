@@ -181,7 +181,7 @@ begin
 	from products p
 	join orderdetails od on od.productCode = p.productCode
 	join orders o on od.orderNumber = o.orderNumber
-	where orderDate BETWEEN desde and hasta;
+	where codigo = p.productCode and orderDate BETWEEN desde and hasta;
 	    
 	    set num = maxnum;
     else
@@ -192,10 +192,28 @@ begin
 end//
 delimiter ;
 
+ 
+#14 Crear una SF que reciba un número de empleado y devuelva el apellido del empleado al
+-- que reporta
 
+delimiter //
 
+create function apellidoEmpleado(num int) 
+returns varchar(50) deterministic
+begin
+    declare apellido varchar(50);
 
+    select jefe.lastName
+    into apellido
+    from employees emp
+    join employees jefe 
+        on emp.reportsTo = jefe.employeeNumber
+    where emp.employeeNumber = num;
 
+    return apellido;
+end//
+
+delimiter ;
 
 
 
