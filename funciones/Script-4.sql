@@ -101,14 +101,96 @@ delimiter //
 create function beneficio(numeroOrden int, numeroProducto int) returns float deterministic
 begin
 	declare benefit float;
-	select (od.priceEach - p.buyPrice) into benefit from products p
+	select (od.priceEach - p.buyPrice)*quantityOrdered into benefit from products p
 	join orderdetails od on p.productCode = od.productCode
-	where numeroOden = od.orderNumber and numeroProducto = p.productNumber
-	retun benefit;
+	where numeroOden = od.orderNumber and numeroProducto = p.productNumber;
+	return benefit;
+end//
+delimiter ;
+
+select beneficio(1,1);
+
+#8 Crear una función que reciba un orderNumber y si el mismo está en estado cancelado
+-- devuelva -1, sino 0.
+
+delimiter //
+create function estadoCancelado(numeroOrden int) returns int deterministic
+begin
+    declare resultado int;
+    declare estado varchar(20);
+
+    select status into estado
+    from orders
+    where orderNumber = numeroOrden;
+
+    if estado = 'Cancelled' then
+        set resultado = -1;
+    else
+        set resultado = 0;
+    end if;
+
+    return resultado;
 end//
 delimiter ;
 
 
+/*
+#10 La columna MSRP en la tabla de productos significa manufacturer 's suggested retail price
+(precio de venta sugerido por el fabricante). Crear una SF que reciba un código de
+producto y devuelva el porcentaje de veces que el producto se vendió por debajo de dicho
+precio.
+*/
+delimiter //
+create function porcentajeVentasBajoMSRP(codigoProducto varchar(15)) returns float deterministic
+begin
+    declare totalVentas int;
+    declare ventasBajo int;
+    declare porcentaje float;
+
+    select count(*) into totalVentas
+    from orderdetails
+    where productCode = codigoProducto;
+
+    select count(*) into ventasBajo
+    from orderdetails od
+    join products p on od.productCode = p.productCode
+    where od.productCode = codigoProducto
+    and od.priceEach < p.MSRP;
+
+    set porcentaje = (ventasBajo / totalVentas) * 100;
+
+    return porcentaje;
+end//
+delimiter ;
+
+
+#Crear una SF que reciba dos fechas desde, hasta y un código de producto. Si el producto
+-- fue ordenado en alguna orden entre esas fechas que devuelva el mayor precio. Si el
+-- producto no fue ordenado en esas fechas que devuelva 0.
+
+delimiter //
+create function orden(desde date, hasta date, codigo varchar(50)) returns int deterministic
+begin
+
+	declare num int;	
+	declare maxnum int;
+	
+	if hasta < desde then
+        
+	select max(p.buyPrice) into maxnum
+	from products p
+	join orderdetails od on od.productCode = p.productCode
+	join orders o on od.orderNumber = o.orderNumber
+	where orderDate BETWEEN desde and hasta;
+	    
+	    set num = maxnum;
+    else
+        set num = 0;
+    end if;
+	
+    return num;
+end//
+delimiter ;
 
 
 
