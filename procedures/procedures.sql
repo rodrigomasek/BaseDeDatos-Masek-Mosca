@@ -97,13 +97,31 @@ delimiter ;
 
 
 
+delimiter //
 
+create procedure ciudades(out listadoCiudades text) 
+begin
+    declare hayFilas boolean default 1;
+    declare ciudadObtenida varchar(255);
+    declare ciudades varchar(4000) default '';
+    declare ciudadCursor cursor for select city from offices where city is not null;
+    declare continue handler for not found set hayFilas = 0;
 
+    set listadoCiudades = '';
+    open ciudadCursor;
 
+    ciudadesLoop: loop
+        fetch ciudadCursor into ciudadObtenida;
+        if hayFilas = 0 then
+            leave ciudadesLoop;
+        end if;
+        set listadoCiudades = concat(ciudadObtenida, ', ', listadoCiudades);
+    end loop ciudadesLoop;
 
+    close ciudadCursor;
+end //
 
-
-
+delimiter ;
 
 
 
