@@ -122,9 +122,34 @@ begin
 end //
 
 delimiter ;
+/*
+#9 cursores
+Crear un SP que utilice un cursor para recorrer la tabla de offices y que genere una lista con
+las ciudades en las cuales hay oficinas. La lista tendrá que devolverse en un parámetro de
+salida VARCHAR(4000) que contenga todas las ciudades separadas por coma.
+getCiudadesOffices()
+*/
 
-
-
+delimiter //
+create procedure productosOrden (in numeroOrden int, out listadoProductos text) 
+begin
+declare hayFilas boolean default 1;
+declare productoObtenido varchar(45) default “”;
+declare ciudadesCursor cursor for select nombreProducto from detalleOrden join producto on idProducto =
+producto_idProducto where idPedido = numeroOrden;
+declare continue handler for not found set hayFilas = 0;
+set listadoProductos = “”;
+open productosCursor;
+ordenesLoop:loop
+fetch productosCursor into productoObtenido;
+if hayFilas = 0 then
+leave ordenesLoop;
+end if;
+set listadoProducto = concat(productoObtenido, “, “, listadoProductos)
+end loop ordenesLoop;
+close productosCursor;
+end//
+delimiter 
 
 
 
