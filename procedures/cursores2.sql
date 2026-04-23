@@ -157,19 +157,49 @@ delimiter ;
 -- procedimiento sumando todos los productos incluidos en la orden de la tabla OrderDetails.
 -- alterCommentOrder()
 
+use classicmodels;
+
 delimiter //
 create procedure procedimiento(in numeroC int)
 begin
 	
-	declare hayfilas boolean default = 1;
-	declare cursamiento cursor for select o.comments, c.customerNumber, sum(od.quantityOrdered)
-	from customers c
-	join orders o on o.customerNumber = c.customerNumber
-	join orderdetails od on od.orderNumber = o.orderNumber
+	declare hayFilas tinyint default 1;
+	declare total float;
+	declare comentarios varchar(100);
+	declare numOrd int;
 	
+	declare cursamiento cursor for select o.comments, sum(od.quantityOrdered * od.priceEach) as total, od.orderNumber
+	from orders o
+	join orderdetails od on od.orderNumber = o.orderNumber
+	where numeroC = o.customerNumber
+	group by od.orderNumber;
+	declare continue handler for not found set hayFilas = 0;
+	open cursamiento;
+	
+	bucle: loop
+		
+		fetch cursamiento into comentarios, total, numOrd;
+		if hayFilas = 0 then
+			leave bucle;
+		end if;
+		
+		if comentarios is null or comentarios = '' then
+			update orders o set o.comments = concat('El total de la orden es: ', total)
+			where o.orderNumber = numOrd;
+		end if;
+			
+	end loop bucle;
+	close cursamiento;
 	
 end //
-begin ;
+delimiter ;
+
+set @agua = 103;
+
+call procedimiento(@agua);
+
+
+
 
 
 
