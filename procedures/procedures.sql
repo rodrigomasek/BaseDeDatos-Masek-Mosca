@@ -3,6 +3,7 @@
 
 use classicmodels;
 
+drop procedure if exists producto;
 delimiter //
 create procedure producto(out productos int)
 begin
@@ -29,6 +30,7 @@ select @messi;
 -- ítems de la tabla orderDetails asociados a él. Tiene que devolver 0 si no encontró filas para
 -- ese orderNumber, o la cantidad ítems borrados si encontró el orderNumber.
 
+drop procedure if exists borrarxd;
 delimiter //
 
 create procedure borrarxd(inout numeroOrden int)
@@ -64,7 +66,7 @@ select @locuraextrema;
 #3 Crear un SP que borre una línea de productos de la tabla Productlines. Tenga en cuenta que
 -- la línea de productos no podrá ser borrada si tiene productos asociados. El procedure debe
 -- devolver un mensaje que contenga una de las siguientes leyendas
-
+drop procedure if exists borrarLineaProducto;
 delimiter //
 
 create procedure borrarLineaProducto(
@@ -93,10 +95,20 @@ end//
 
 delimiter ;
 
+#4 Realizar un SP que muestre la cantidad de órdenes que hay en un estado estado. (lo cambie por mi bien)
+
+delimiter //
+create procedure listar(in estado varchar(50))
+begin
+	select count(*) from orders o
+    where estado = o.status;
+end //
+delimiter ;
+
+call listar('Shipped');
 
 
-
-
+/*
 delimiter //
 
 create procedure ciudades(out listadoCiudades text) 
@@ -129,7 +141,7 @@ las ciudades en las cuales hay oficinas. La lista tendrá que devolverse en un p
 salida VARCHAR(4000) que contenga todas las ciudades separadas por coma.
 getCiudadesOffices()
 */
-
+/*
 delimiter //
 create procedure productosOrden (in numeroOrden int, out listadoProductos text) 
 begin
@@ -172,16 +184,7 @@ end //
 begin ;
 
 
-
-
-
-
-
-
-
-
-
-
+*/
 
 
 
