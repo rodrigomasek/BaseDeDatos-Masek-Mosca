@@ -1,17 +1,9 @@
 USE base_de_datos;
 
--- =========================================================
--- STORED FUNCTIONS
--- =========================================================
-
 DELIMITER //
 
 
--- =========================================================
--- FUNCTION 1
--- Tiempo promedio que tarda en vender
--- Devuelve días
--- =========================================================
+-- Funcion 1
 
 CREATE FUNCTION fn_tiempo_promedio_venta(
     p_id_usuario INT
@@ -41,10 +33,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- FUNCTION 2
--- Comisión del sistema
--- =========================================================
+-- Funcion 2
 
 CREATE FUNCTION fn_comision(
     p_monto DECIMAL(15,2),
@@ -71,10 +60,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- FUNCTION 3
--- Porcentaje de ventas concretadas
--- =========================================================
+-- Funcion 3
 
 CREATE FUNCTION fn_porcentaje_ventas(
     p_id_usuario INT
@@ -105,10 +91,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- FUNCTION 4
--- Mayor oferta de una subasta
--- =========================================================
+-- Funcion 4
 
 CREATE FUNCTION fn_mayor_oferta(
     p_id_subasta INT
@@ -137,10 +120,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- FUNCTION 5
--- Precio promedio de productos de una categoria
--- =========================================================
+-- Funcion 5
 
 CREATE FUNCTION fn_precio_promedio_categoria(
     p_id_categoria INT
@@ -163,10 +143,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- FUNCTION 6
--- Ultima fecha de compra
--- =========================================================
+-- Funcion 6
 
 CREATE FUNCTION fn_ultima_compra(
     p_id_usuario INT
@@ -185,15 +162,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- STORED PROCEDURES
--- =========================================================
-
-
--- =========================================================
--- PROCEDURE 1
--- Buscar publicaciones por nombre de producto
--- =========================================================
+-- Procedure 1
 
 CREATE PROCEDURE sp_buscar_publicaciones(
     IN p_texto VARCHAR(200),
@@ -233,10 +202,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- PROCEDURE 2
--- Pujar en una subasta
--- =========================================================
+-- Procedure 2
 
 CREATE PROCEDURE sp_pujar(
     IN p_id_subasta INT,
@@ -245,7 +211,7 @@ CREATE PROCEDURE sp_pujar(
     OUT p_ok BOOLEAN
 )
 BEGIN
-    DECLARE v_publicacion INT;
+    DECLARE v_existe INT DEFAULT 0;
     DECLARE v_vendedor INT;
     DECLARE v_estado INT;
     DECLARE v_fecha_fin DATETIME;
@@ -253,45 +219,41 @@ BEGIN
 
     SET p_ok = FALSE;
 
-    SELECT
-        s.id_publicacion,
-        p.id_vendedor,
-        p.estado,
-        s.fecha_fin
-    INTO
-        v_publicacion,
-        v_vendedor,
-        v_estado,
-        v_fecha_fin
+    SELECT COUNT(*)
+    INTO v_existe
     FROM subastas s
     INNER JOIN publicaciones p
         ON p.id = s.id_publicacion
     WHERE s.id = p_id_subasta;
 
-    IF v_publicacion IS NULL THEN
-
-        SET p_ok = FALSE;
-
-    ELSEIF v_estado <> 1 THEN
-
-        SET p_ok = FALSE;
-
-    ELSEIF v_fecha_fin <= NOW() THEN
-
-        SET p_ok = FALSE;
-
-    ELSEIF p_id_ofertante = v_vendedor THEN
+    IF v_existe = 0 THEN
 
         SET p_ok = FALSE;
 
     ELSE
+
+        SELECT
+            p.id_vendedor,
+            p.estado,
+            s.fecha_fin
+        INTO
+            v_vendedor,
+            v_estado,
+            v_fecha_fin
+        FROM subastas s
+        INNER JOIN publicaciones p
+            ON p.id = s.id_publicacion
+        WHERE s.id = p_id_subasta;
 
         SELECT COALESCE(MAX(monto), 0)
         INTO v_mayor
         FROM ofertas
         WHERE id_subasta = p_id_subasta;
 
-        IF p_monto > v_mayor THEN
+        IF v_estado = 1
+           AND v_fecha_fin > NOW()
+           AND p_id_ofertante <> v_vendedor
+           AND p_monto > v_mayor THEN
 
             INSERT INTO ofertas(
                 monto,
@@ -317,10 +279,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- PROCEDURE 3
--- Pausar publicacion
--- =========================================================
+-- Procedure 3
 
 CREATE PROCEDURE sp_pausar_publicacion(
     IN p_id_publicacion INT,
@@ -330,44 +289,50 @@ CREATE PROCEDURE sp_pausar_publicacion(
 BEGIN
     DECLARE v_vendedor INT;
     DECLARE v_estado INT;
-    DECLARE v_es_directa INT;
+    DECLARE v_es_directa INT DEFAULT 0;
+    DECLARE v_existe INT DEFAULT 0;
 
     SET p_ok = FALSE;
 
-    SELECT
-        p.id_vendedor,
-        p.estado,
-        EXISTS(
-            SELECT 1
-            FROM ventas_directas vd
-            WHERE vd.id_publicacion = p.id
-        )
-    INTO
-        v_vendedor,
-        v_estado,
-        v_es_directa
-    FROM publicaciones p
-    WHERE p.id = p_id_publicacion;
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM publicaciones
+    WHERE id = p_id_publicacion;
 
-    IF v_vendedor = p_id_usuario
-       AND v_estado = 1
-       AND v_es_directa = 1 THEN
+    IF v_existe > 0 THEN
 
-        UPDATE publicaciones
-        SET estado = 2
-        WHERE id = p_id_publicacion;
+        SELECT
+            p.id_vendedor,
+            p.estado
+        INTO
+            v_vendedor,
+            v_estado
+        FROM publicaciones p
+        WHERE p.id = p_id_publicacion;
 
-        SET p_ok = TRUE;
+        SELECT COUNT(*)
+        INTO v_es_directa
+        FROM ventas_directas vd
+        WHERE vd.id_publicacion = p_id_publicacion;
+
+        IF v_vendedor = p_id_usuario
+           AND v_estado = 1
+           AND v_es_directa = 1 THEN
+
+            UPDATE publicaciones
+            SET estado = 2
+            WHERE id = p_id_publicacion;
+
+            SET p_ok = TRUE;
+
+        END IF;
 
     END IF;
 
 END//
 
 
--- =========================================================
--- PROCEDURE 4
--- Actualizar nivel del usuario
--- =========================================================
+-- Procedure 4
 
 CREATE PROCEDURE sp_actualizar_nivel(
     IN p_id_usuario INT,
@@ -377,70 +342,77 @@ CREATE PROCEDURE sp_actualizar_nivel(
 BEGIN
     DECLARE v_ventas INT;
     DECLARE v_facturacion DECIMAL(15,2);
+    DECLARE v_existe INT;
 
     SET p_ok = FALSE;
     SET p_nuevo_nivel = NULL;
 
     SELECT COUNT(*)
-    INTO v_ventas
-    FROM compras c
-    INNER JOIN publicaciones p
-        ON p.id = c.id_publicacion
-    WHERE p.id_vendedor = p_id_usuario;
+    INTO v_existe
+    FROM usuarios
+    WHERE id = p_id_usuario;
 
-    SELECT COALESCE(
-        SUM(p.precio_etiqueta * c.cant),
-        0
-    )
-    INTO v_facturacion
-    FROM compras c
-    INNER JOIN publicaciones p
-        ON p.id = c.id_publicacion
-    WHERE p.id_vendedor = p_id_usuario;
+    IF v_existe > 0 THEN
 
-    IF v_ventas >= 11 OR v_facturacion >= 1000000 THEN
+        SELECT COUNT(*)
+        INTO v_ventas
+        FROM compras c
+        INNER JOIN publicaciones p
+            ON p.id = c.id_publicacion
+        WHERE p.id_vendedor = p_id_usuario;
 
-        UPDATE usuarios
-        SET id_nivel = 3
-        WHERE id = p_id_usuario;
+        SELECT COALESCE(
+            SUM(p.precio_etiqueta * c.cant),
+            0
+        )
+        INTO v_facturacion
+        FROM compras c
+        INNER JOIN publicaciones p
+            ON p.id = c.id_publicacion
+        WHERE p.id_vendedor = p_id_usuario;
 
-        SET p_nuevo_nivel = 'Gold';
+        IF v_ventas >= 11 OR v_facturacion >= 1000000 THEN
 
-    ELSEIF v_ventas >= 6 OR v_facturacion >= 100000 THEN
+            UPDATE usuarios
+            SET id_nivel = 3
+            WHERE id = p_id_usuario;
 
-        UPDATE usuarios
-        SET id_nivel = 2
-        WHERE id = p_id_usuario;
+            SET p_nuevo_nivel = 'Gold';
 
-        SET p_nuevo_nivel = 'Platinum';
+        ELSEIF v_ventas >= 6 OR v_facturacion >= 100000 THEN
 
-    ELSEIF v_ventas >= 1 THEN
+            UPDATE usuarios
+            SET id_nivel = 2
+            WHERE id = p_id_usuario;
 
-        UPDATE usuarios
-        SET id_nivel = 1
-        WHERE id = p_id_usuario;
+            SET p_nuevo_nivel = 'Platinum';
 
-        SET p_nuevo_nivel = 'Normal';
+        ELSEIF v_ventas >= 1 THEN
 
-    ELSE
+            UPDATE usuarios
+            SET id_nivel = 1
+            WHERE id = p_id_usuario;
 
-        UPDATE usuarios
-        SET id_nivel = NULL
-        WHERE id = p_id_usuario;
+            SET p_nuevo_nivel = 'Normal';
 
-        SET p_nuevo_nivel = NULL;
+        ELSE
+
+            UPDATE usuarios
+            SET id_nivel = NULL
+            WHERE id = p_id_usuario;
+
+            SET p_nuevo_nivel = NULL;
+
+        END IF;
+
+        SET p_ok = TRUE;
 
     END IF;
-
-    SET p_ok = TRUE;
 
 END//
 
 
--- =========================================================
--- PROCEDURE 5
--- Calificar usuario
--- =========================================================
+-- Procedure 5
 
 CREATE PROCEDURE sp_calificar_usuario(
     IN p_id_compra INT,
@@ -452,16 +424,20 @@ CREATE PROCEDURE sp_calificar_usuario(
 BEGIN
     DECLARE v_comprador INT;
     DECLARE v_vendedor INT;
-    DECLARE v_existe INT;
+    DECLARE v_existe INT DEFAULT 0;
 
     SET p_ok = FALSE;
 
-    IF p_puntuacion < 0
-       OR p_puntuacion > 100 THEN
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM compras c
+    INNER JOIN publicaciones p
+        ON p.id = c.id_publicacion
+    WHERE c.id = p_id_compra;
 
-        SET p_ok = FALSE;
-
-    ELSE
+    IF v_existe > 0
+       AND p_puntuacion >= 0
+       AND p_puntuacion <= 100 THEN
 
         SELECT
             c.id_comprador,
@@ -474,42 +450,38 @@ BEGIN
             ON p.id = c.id_publicacion
         WHERE c.id = p_id_compra;
 
-        IF v_comprador IS NOT NULL THEN
+        IF (
+            p_id_calificador = v_comprador
+            AND p_id_calificado = v_vendedor
+        )
+        OR (
+            p_id_calificador = v_vendedor
+            AND p_id_calificado = v_comprador
+        ) THEN
 
-            IF (
-                p_id_calificador = v_comprador
-                AND p_id_calificado = v_vendedor
-            )
-            OR (
-                p_id_calificador = v_vendedor
-                AND p_id_calificado = v_comprador
-            ) THEN
+            SELECT COUNT(*)
+            INTO v_existe
+            FROM calificaciones
+            WHERE id_compra = p_id_compra
+              AND id_calificador = p_id_calificador
+              AND id_calificado = p_id_calificado;
 
-                SELECT COUNT(*)
-                INTO v_existe
-                FROM calificaciones
-                WHERE id_compra = p_id_compra
-                  AND id_calificador = p_id_calificador
-                  AND id_calificado = p_id_calificado;
+            IF v_existe = 0 THEN
 
-                IF v_existe = 0 THEN
+                INSERT INTO calificaciones(
+                    id_compra,
+                    id_calificador,
+                    id_calificado,
+                    puntuacion
+                )
+                VALUES(
+                    p_id_compra,
+                    p_id_calificador,
+                    p_id_calificado,
+                    p_puntuacion
+                );
 
-                    INSERT INTO calificaciones(
-                        id_compra,
-                        id_calificador,
-                        id_calificado,
-                        puntuacion
-                    )
-                    VALUES(
-                        p_id_compra,
-                        p_id_calificador,
-                        p_id_calificado,
-                        p_puntuacion
-                    );
-
-                    SET p_ok = TRUE;
-
-                END IF;
+                SET p_ok = TRUE;
 
             END IF;
 
@@ -520,59 +492,67 @@ BEGIN
 END//
 
 
--- =========================================================
--- PROCEDURE 6
--- Ganador de subasta
--- =========================================================
+-- Procedure 6
 
 CREATE PROCEDURE sp_ganador_subasta(
     IN p_id_subasta INT,
     OUT p_ok BOOLEAN
 )
 BEGIN
+    DECLARE v_existe INT DEFAULT 0;
 
     SET p_ok = FALSE;
 
-    SELECT
-        u.nombre AS usuario,
-        u.email,
-        pr.nombre AS producto,
-        COUNT(DISTINCT o.id_ofertante) AS cantidad_oferentes,
-        p.precio_etiqueta AS valor_inicial,
-        MAX(o.monto) AS valor_ganador
-    FROM subastas s
-    INNER JOIN publicaciones p
-        ON p.id = s.id_publicacion
-    INNER JOIN publicaciones_productos pp
-        ON pp.id_publicacion = p.id
-    INNER JOIN productos pr
-        ON pr.id = pp.id_producto
-    INNER JOIN ofertas o
-        ON o.id_subasta = s.id
-    INNER JOIN usuarios u
-        ON u.id = o.id_ofertante
-    WHERE s.id = p_id_subasta
-      AND o.monto = (
-          SELECT MAX(o2.monto)
-          FROM ofertas o2
-          WHERE o2.id_subasta = s.id
-      )
-    GROUP BY
-        u.id,
-        u.nombre,
-        u.email,
-        pr.nombre,
-        p.precio_etiqueta;
+    SELECT COUNT(*)
+    INTO v_existe
+    FROM subastas
+    WHERE id = p_id_subasta;
 
-    SET p_ok = TRUE;
+    IF v_existe > 0 THEN
+
+        SELECT
+            u.nombre AS usuario,
+            u.email,
+            pr.nombre AS producto,
+
+            (
+                SELECT COUNT(DISTINCT o2.id_ofertante)
+                FROM ofertas o2
+                WHERE o2.id_subasta = s.id
+            ) AS cantidad_oferentes,
+
+            p.precio_etiqueta AS valor_inicial,
+            o.monto AS valor_ganador
+
+        FROM subastas s
+        INNER JOIN publicaciones p
+            ON p.id = s.id_publicacion
+        INNER JOIN publicaciones_productos pp
+            ON pp.id_publicacion = p.id
+        INNER JOIN productos pr
+            ON pr.id = pp.id_producto
+        INNER JOIN ofertas o
+            ON o.id_subasta = s.id
+        INNER JOIN usuarios u
+            ON u.id = o.id_ofertante
+
+        WHERE s.id = p_id_subasta
+          AND o.monto = (
+              SELECT MAX(o2.monto)
+              FROM ofertas o2
+              WHERE o2.id_subasta = s.id
+          )
+
+        LIMIT 1;
+
+        SET p_ok = TRUE;
+
+    END IF;
 
 END//
 
 
--- =========================================================
--- PROCEDURE 7
--- Crear pregunta
--- =========================================================
+-- Procedure 7
 
 CREATE PROCEDURE sp_crear_pregunta(
     IN p_id_usuario INT,
@@ -583,46 +563,52 @@ CREATE PROCEDURE sp_crear_pregunta(
 BEGIN
     DECLARE v_vendedor INT;
     DECLARE v_estado INT;
+    DECLARE v_existe INT DEFAULT 0;
 
     SET p_ok = FALSE;
 
-    SELECT
-        id_vendedor,
-        estado
-    INTO
-        v_vendedor,
-        v_estado
+    SELECT COUNT(*)
+    INTO v_existe
     FROM publicaciones
     WHERE id = p_id_publicacion;
 
-    IF v_vendedor IS NOT NULL
-       AND v_estado = 1
-       AND p_texto IS NOT NULL
-       AND TRIM(p_texto) <> ''
-       AND p_id_usuario <> v_vendedor THEN
+    IF v_existe > 0 THEN
 
-        INSERT INTO preguntas(
-            texto,
-            id_usuario_pregunta,
-            id_publicacion
-        )
-        VALUES(
-            p_texto,
-            p_id_usuario,
-            p_id_publicacion
-        );
+        SELECT
+            id_vendedor,
+            estado
+        INTO
+            v_vendedor,
+            v_estado
+        FROM publicaciones
+        WHERE id = p_id_publicacion;
 
-        SET p_ok = TRUE;
+        IF v_estado = 1
+           AND p_texto IS NOT NULL
+           AND TRIM(p_texto) <> ''
+           AND p_id_usuario <> v_vendedor THEN
+
+            INSERT INTO preguntas(
+                texto,
+                id_usuario_pregunta,
+                id_publicacion
+            )
+            VALUES(
+                p_texto,
+                p_id_usuario,
+                p_id_publicacion
+            );
+
+            SET p_ok = TRUE;
+
+        END IF;
 
     END IF;
 
 END//
 
 
--- =========================================================
--- PROCEDURE 8
--- Estadisticas de vendedor
--- =========================================================
+-- Procedure 8
 
 CREATE PROCEDURE sp_estadisticas_vendedor(
     IN p_id_usuario INT,
@@ -703,10 +689,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- PROCEDURE 9
--- Top 10 vendedores
--- =========================================================
+-- Procedure 9
 
 CREATE PROCEDURE sp_top_vendedores(
     IN p_fecha_inicio DATE,
@@ -746,18 +729,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- VIEWS
--- =========================================================
-
-
-//
-
-
--- =========================================================
--- VIEW 1
--- Preguntas de publicaciones activas sin respuesta
--- =========================================================
+-- vista 1
 
 CREATE VIEW vw_preguntas_sin_responder AS
 SELECT
@@ -779,10 +751,7 @@ WHERE p.estado = 1
   AND r.id IS NULL;
 
 
-// =========================================================
-// VIEW 2
-// Top 10 categorias de esta semana
-// =========================================================
+-- vista 2
 
 CREATE VIEW vw_top_categorias_semana AS
 SELECT
@@ -808,11 +777,7 @@ ORDER BY cantidad_publicaciones DESC
 LIMIT 10;
 
 
-// =========================================================
-// VIEW 3
-// Publicaciones en tendencia de hoy
-// Mayor cantidad de preguntas
-// =========================================================
+-- vista 3
 
 CREATE VIEW vw_publicaciones_tendencia AS
 SELECT
@@ -830,10 +795,7 @@ GROUP BY
 ORDER BY cantidad_preguntas DESC;
 
 
-// =========================================================
-// VIEW 4
-// Mejor vendedor por categoria
-// =========================================================
+-- vista 4
 
 CREATE VIEW vw_mejor_vendedor_categoria AS
 SELECT DISTINCT
@@ -862,16 +824,7 @@ WHERE u.reputacion = (
 );
 
 
-// =========================================================
-// TRIGGERS
-// =========================================================
-
-
-// =========================================================
-// TRIGGER 1
-// Antes de eliminar pregunta,
-// elimina respuestas asociadas
-// =========================================================
+-- trigger 1
 
 CREATE TRIGGER trg_eliminar_respuestas
 BEFORE DELETE ON preguntas
@@ -884,10 +837,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- TRIGGER 2
--- Despues de una venta actualiza nivel del vendedor
--- =========================================================
+-- trigger 2
 
 CREATE TRIGGER trg_actualizar_nivel_venta
 AFTER INSERT ON compras
@@ -944,10 +894,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- TRIGGER 3
--- Actualizar reputacion
--- =========================================================
+-- trigger 3
 
 CREATE TRIGGER trg_actualizar_reputacion
 AFTER INSERT ON calificaciones
@@ -965,10 +912,7 @@ BEGIN
 END//
 
 
--- =========================================================
--- TRIGGER 4
--- Validar puja
--- =========================================================
+-- trigger 4
 
 CREATE TRIGGER trg_validar_puja
 BEFORE INSERT ON ofertas
@@ -1022,20 +966,179 @@ BEGIN
 END//
 
 
--- =========================================================
-// EVENTOS
-// =========================================================
+-- trigger 5
+
+CREATE TRIGGER trg_validar_respuesta
+BEFORE INSERT ON respuestas
+FOR EACH ROW
+BEGIN
+    DECLARE v_vendedor INT;
+    DECLARE v_estado INT;
+
+    SELECT
+        p.id_vendedor,
+        p.estado
+    INTO
+        v_vendedor,
+        v_estado
+    FROM preguntas q
+    INNER JOIN publicaciones p
+        ON p.id = q.id_publicacion
+    WHERE q.id = NEW.id_pregunta;
+
+    IF v_estado <> 1 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La publicacion no esta activa';
+
+    ELSEIF NEW.id_usuario_responde <> v_vendedor THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Solo el vendedor puede responder';
+
+    END IF;
+
+END//
 
 
-// =========================================================
-// EVENTO 1
-// Eliminar publicaciones pausadas con mas de 90 dias
-// =========================================================
+-- trigger 6
+
+CREATE TRIGGER trg_validar_pregunta
+BEFORE INSERT ON preguntas
+FOR EACH ROW
+BEGIN
+    DECLARE v_vendedor INT;
+    DECLARE v_estado INT;
+
+    SELECT
+        id_vendedor,
+        estado
+    INTO
+        v_vendedor,
+        v_estado
+    FROM publicaciones
+    WHERE id = NEW.id_publicacion;
+
+    IF v_estado <> 1 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La publicacion no esta activa';
+
+    ELSEIF NEW.id_usuario_pregunta = v_vendedor THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El vendedor no puede realizar preguntas';
+
+    END IF;
+
+END//
+
+
+-- trigger 7
+
+CREATE TRIGGER trg_eliminar_producto
+BEFORE DELETE ON productos
+FOR EACH ROW
+BEGIN
+    DECLARE v_publicaciones INT;
+
+    SELECT COUNT(*)
+    INTO v_publicaciones
+    FROM publicaciones_productos pp
+    INNER JOIN publicaciones p
+        ON p.id = pp.id_publicacion
+    WHERE pp.id_producto = OLD.id
+      AND p.estado IN (1,2,4);
+
+    IF v_publicaciones > 0 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El producto tiene publicaciones activas, pausadas u observadas';
+
+    END IF;
+
+END//
+
+
+-- trigger 8
+
+CREATE TRIGGER trg_eliminar_categoria
+BEFORE DELETE ON categorias
+FOR EACH ROW
+BEGIN
+    DECLARE v_publicaciones INT;
+
+    SELECT COUNT(*)
+    INTO v_publicaciones
+    FROM productos pr
+    INNER JOIN publicaciones_productos pp
+        ON pp.id_producto = pr.id
+    INNER JOIN publicaciones p
+        ON p.id = pp.id_publicacion
+    WHERE pr.id_categoria = OLD.id
+      AND p.estado = 1;
+
+    IF v_publicaciones > 0 THEN
+
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'La categoria tiene publicaciones activas';
+
+    END IF;
+
+END//
+
+
+-- trigger 9
+
+CREATE TRIGGER trg_finalizar_venta
+AFTER INSERT ON compras
+FOR EACH ROW
+BEGIN
+
+    UPDATE publicaciones
+    SET estado = 3
+    WHERE id = NEW.id_publicacion
+      AND estado = 1;
+
+END//
+
+
+-- evento 1
 
 CREATE EVENT ev_eliminar_publicaciones_pausadas
 ON SCHEDULE EVERY 1 WEEK
 DO
 BEGIN
+
+    DELETE r
+    FROM respuestas r
+    INNER JOIN preguntas q
+        ON q.id = r.id_pregunta
+    INNER JOIN publicaciones p
+        ON p.id = q.id_publicacion
+    WHERE p.estado = 2
+      AND p.fecha < NOW() - INTERVAL 90 DAY;
+
+    DELETE q
+    FROM preguntas q
+    INNER JOIN publicaciones p
+        ON p.id = q.id_publicacion
+    WHERE p.estado = 2
+      AND p.fecha < NOW() - INTERVAL 90 DAY;
+
+    DELETE pp
+    FROM publicaciones_productos pp
+    INNER JOIN publicaciones p
+        ON p.id = pp.id_publicacion
+    WHERE p.estado = 2
+      AND p.fecha < NOW() - INTERVAL 90 DAY;
+
+    DELETE vd
+    FROM ventas_directas vd
+    INNER JOIN publicaciones p
+        ON p.id = vd.id_publicacion
+    WHERE p.estado = 2
+      AND p.fecha < NOW() - INTERVAL 90 DAY;
 
     DELETE FROM publicaciones
     WHERE estado = 2
@@ -1044,11 +1147,7 @@ BEGIN
 END//
 
 
--- =========================================================
-// EVENTO 2
-// Marcar como observadas publicaciones directas
-// sin medio de pago
-// =========================================================
+-- evento 2
 
 CREATE EVENT ev_observar_sin_pago
 ON SCHEDULE EVERY 1 DAY
@@ -1065,11 +1164,7 @@ BEGIN
 END//
 
 
--- =========================================================
-// EVENTO 3
-// Notificar preguntas sin responder
-// Todos los dias a las 10:00
-// =========================================================
+-- evento 3
 
 CREATE EVENT ev_notificar_preguntas
 ON SCHEDULE EVERY 1 DAY
@@ -1105,11 +1200,7 @@ BEGIN
 END//
 
 
--- =========================================================
-// EVENTO 4
-// Estadisticas diarias
-// Todos los dias a las 00:00
-// =========================================================
+-- evento 4
 
 CREATE EVENT ev_estadisticas_diarias
 ON SCHEDULE EVERY 1 DAY
@@ -1169,32 +1260,55 @@ END//
 DELIMITER ;
 
 
--- =========================================================
--- EVENT SCHEDULER
--- =========================================================
+-- even scheduler
 
 SET GLOBAL event_scheduler = ON;
 
 
--- =========================================================
--- TRANSACCIONES
--- =========================================================
+-- indices
+
+CREATE INDEX idx_productos_nombre
+ON productos(nombre);
 
 
--- ---------------------------------------------------------
--- TRANSACCION DE COMPRA
--- ---------------------------------------------------------
+CREATE INDEX idx_publicaciones_nombre
+ON publicaciones(nombre);
+
+
+CREATE INDEX idx_publicaciones_estado
+ON publicaciones(estado);
+
+
+CREATE INDEX idx_publicaciones_estado_fecha
+ON publicaciones(estado, fecha);
+
+
+CREATE INDEX idx_preguntas_publicacion
+ON preguntas(id_publicacion);
+
+
+CREATE INDEX idx_compras_publicacion
+ON compras(id_publicacion);
+
+
+CREATE INDEX idx_compras_comprador
+ON compras(id_comprador);
+
+
+CREATE INDEX idx_ofertas_subasta
+ON ofertas(id_subasta);
+
+
+-- transaccion de compra
 
 START TRANSACTION;
 
--- Verificar que la publicacion este activa
 SELECT *
 FROM publicaciones
 WHERE id = 1
   AND estado = 1
 FOR UPDATE;
 
--- Registrar compra
 INSERT INTO compras(
     cant,
     id_publicacion,
@@ -1206,7 +1320,6 @@ VALUES(
     2
 );
 
--- Finalizar publicacion
 UPDATE publicaciones
 SET estado = 3
 WHERE id = 1
@@ -1215,48 +1328,38 @@ WHERE id = 1
 COMMIT;
 
 
--- ---------------------------------------------------------
--- TRANSACCION DE OFERTA
--- ---------------------------------------------------------
+-- transaccion de oferta
 
 START TRANSACTION;
 
--- Bloquear subasta
 SELECT *
 FROM subastas
 WHERE id = 1
 FOR UPDATE;
 
--- Insertar oferta
 INSERT INTO ofertas(
     monto,
     id_subasta,
     id_ofertante
 )
 VALUES(
-    50000,
+    100000,
     1,
     3
 );
 
--- Actualizar oferta mayor
 UPDATE subastas
-SET oferta_mayor = 50000
+SET oferta_mayor = 100000
 WHERE id = 1;
 
 COMMIT;
 
 
--- =========================================================
--- ROLES
--- =========================================================
+-- roles
 
+-- auditor
 
--- ---------------------------------------------------------
--- AUDITOR
--- ---------------------------------------------------------
-
-CREATE ROLE auditor;
+CREATE ROLE IF NOT EXISTS auditor;
 
 GRANT SELECT
 ON base_de_datos.vw_preguntas_sin_responder
@@ -1275,11 +1378,9 @@ ON base_de_datos.vw_mejor_vendedor_categoria
 TO auditor;
 
 
--- ---------------------------------------------------------
--- DESARROLLADOR
--- ---------------------------------------------------------
+-- desarrollador
 
-CREATE ROLE desarrollador;
+CREATE ROLE IF NOT EXISTS desarrollador;
 
 GRANT SELECT
 ON base_de_datos.*
@@ -1290,42 +1391,10 @@ ON base_de_datos.*
 TO desarrollador;
 
 
--- ---------------------------------------------------------
--- ADMIN
--- ---------------------------------------------------------
+-- admin
 
-CREATE ROLE admin;
+CREATE ROLE IF NOT EXISTS admin;
 
 GRANT ALL PRIVILEGES
 ON base_de_datos.*
 TO admin;
-
-
--- =========================================================
--- CONSULTAS PARA VERIFICAR LOS OBJETOS
--- =========================================================
-
-SHOW TABLES;
-
-SHOW FULL TABLES
-WHERE Table_type = 'VIEW';
-
-SHOW TRIGGERS;
-
-SELECT
-    ROUTINE_TYPE,
-    ROUTINE_NAME
-FROM INFORMATION_SCHEMA.ROUTINES
-WHERE ROUTINE_SCHEMA = 'base_de_datos';
-
-SELECT
-    EVENT_NAME,
-    STATUS
-FROM INFORMATION_SCHEMA.EVENTS
-WHERE EVENT_SCHEMA = 'base_de_datos';
-
-SHOW GRANTS FOR auditor;
-
-SHOW GRANTS FOR desarrollador;
-
-SHOW GRANTS FOR admin;

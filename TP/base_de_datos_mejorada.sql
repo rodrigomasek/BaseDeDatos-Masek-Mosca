@@ -5,19 +5,11 @@ CREATE DATABASE base_de_datos;
 USE base_de_datos;
 
 
--- =========================================================
--- NIVELES DE USUARIO
--- =========================================================
-
 CREATE TABLE niveles_usuario(
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(30) NOT NULL UNIQUE
 );
 
-
--- =========================================================
--- USUARIOS
--- =========================================================
 
 CREATE TABLE usuarios(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -34,25 +26,19 @@ CREATE TABLE usuarios(
 );
 
 
--- =========================================================
--- NIVELES DE PUBLICACION
--- =========================================================
-
 CREATE TABLE niveles_publicacion(
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(30) NOT NULL UNIQUE
 );
 
 
--- =========================================================
--- PUBLICACIONES
---
+-- publicaciones
+
 -- estado:
--- 1 = ACTIVA
--- 2 = PAUSADA
--- 3 = FINALIZADA
--- 4 = OBSERVADA
--- =========================================================
+-- 1 = activa
+-- 2 = pausada
+-- 3 = finalizada
+-- 4 = observada
 
 CREATE TABLE publicaciones(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -75,29 +61,17 @@ CREATE TABLE publicaciones(
 );
 
 
--- =========================================================
--- METODOS DE PAGO
--- =========================================================
-
 CREATE TABLE metodos_pago(
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
 
--- =========================================================
--- METODOS DE ENVIO
--- =========================================================
-
 CREATE TABLE metodos_envio(
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(50) NOT NULL UNIQUE
 );
 
-
--- =========================================================
--- VENTAS DIRECTAS
--- =========================================================
 
 CREATE TABLE ventas_directas(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -112,13 +86,11 @@ CREATE TABLE ventas_directas(
         REFERENCES metodos_pago(id),
 
     FOREIGN KEY (id_metodo_envio)
-        REFERENCES metodos_envio(id)
+        REFERENCES metodos_envio(id),
+
+    UNIQUE(id_publicacion)
 );
 
-
--- =========================================================
--- SUBASTAS
--- =========================================================
 
 CREATE TABLE subastas(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -127,13 +99,11 @@ CREATE TABLE subastas(
     id_publicacion INT NOT NULL,
 
     FOREIGN KEY (id_publicacion)
-        REFERENCES publicaciones(id)
+        REFERENCES publicaciones(id),
+
+    UNIQUE(id_publicacion)
 );
 
-
--- =========================================================
--- CATEGORIAS
--- =========================================================
 
 CREATE TABLE categorias(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -141,16 +111,13 @@ CREATE TABLE categorias(
 );
 
 
--- =========================================================
--- PRODUCTOS
--- =========================================================
-
 CREATE TABLE productos(
     id INT PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(200) NOT NULL,
     descripcion TEXT,
+
     cant INT NOT NULL DEFAULT 1
-        CHECK (cant >= 0),
+        CHECK (cant > 0),
 
     id_categoria INT NOT NULL,
 
@@ -158,10 +125,6 @@ CREATE TABLE productos(
         REFERENCES categorias(id)
 );
 
-
--- =========================================================
--- PUBLICACIONES - PRODUCTOS
--- =========================================================
 
 CREATE TABLE publicaciones_productos(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -178,13 +141,10 @@ CREATE TABLE publicaciones_productos(
 );
 
 
--- =========================================================
--- COMPRAS
--- =========================================================
-
 CREATE TABLE compras(
     id INT PRIMARY KEY AUTO_INCREMENT,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+
     cant INT NOT NULL
         CHECK (cant > 0),
 
@@ -199,13 +159,10 @@ CREATE TABLE compras(
 );
 
 
--- =========================================================
--- OFERTAS
--- =========================================================
-
 CREATE TABLE ofertas(
     id INT PRIMARY KEY AUTO_INCREMENT,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+
     monto DECIMAL(15,2) NOT NULL
         CHECK (monto > 0),
 
@@ -219,10 +176,6 @@ CREATE TABLE ofertas(
         REFERENCES usuarios(id)
 );
 
-
--- =========================================================
--- PREGUNTAS
--- =========================================================
 
 CREATE TABLE preguntas(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -240,10 +193,6 @@ CREATE TABLE preguntas(
 );
 
 
--- =========================================================
--- RESPUESTAS
--- =========================================================
-
 CREATE TABLE respuestas(
     id INT PRIMARY KEY AUTO_INCREMENT,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -259,10 +208,6 @@ CREATE TABLE respuestas(
         REFERENCES preguntas(id)
 );
 
-
--- =========================================================
--- CALIFICACIONES
--- =========================================================
 
 CREATE TABLE calificaciones(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -289,16 +234,13 @@ CREATE TABLE calificaciones(
 );
 
 
--- =========================================================
--- NOTIFICACIONES
--- =========================================================
-
 CREATE TABLE notificaciones(
     id INT PRIMARY KEY AUTO_INCREMENT,
 
     id_usuario INT NOT NULL,
     mensaje VARCHAR(500) NOT NULL,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+
     leida TINYINT NOT NULL DEFAULT 0
         CHECK (leida IN (0,1)),
 
@@ -306,10 +248,6 @@ CREATE TABLE notificaciones(
         REFERENCES usuarios(id)
 );
 
-
--- =========================================================
--- ESTADISTICAS
--- =========================================================
 
 CREATE TABLE estadisticas(
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -319,65 +257,3 @@ CREATE TABLE estadisticas(
     valor DECIMAL(15,2) NOT NULL,
     descripcion VARCHAR(255)
 );
-
-
--- =========================================================
--- DATOS BASE
--- =========================================================
-
-INSERT INTO niveles_usuario(id, nombre)
-VALUES
-(1, 'Normal'),
-(2, 'Platinum'),
-(3, 'Gold');
-
-
-INSERT INTO niveles_publicacion(id, nombre)
-VALUES
-(1, 'Bronce'),
-(2, 'Plata'),
-(3, 'Oro'),
-(4, 'Platino');
-
-
-INSERT INTO metodos_pago(id, nombre)
-VALUES
-(1, 'Tarjeta de credito'),
-(2, 'Tarjeta de debito'),
-(3, 'Pago Facil'),
-(4, 'Rapipago');
-
-
-INSERT INTO metodos_envio(id, nombre)
-VALUES
-(1, 'OCA'),
-(2, 'Correo Argentino');
-
-
--- =========================================================
--- INDICES
--- =========================================================
-
-CREATE INDEX idx_productos_nombre
-ON productos(nombre);
-
-CREATE INDEX idx_publicaciones_nombre
-ON publicaciones(nombre);
-
-CREATE INDEX idx_publicaciones_estado
-ON publicaciones(estado);
-
-CREATE INDEX idx_publicaciones_estado_fecha
-ON publicaciones(estado, fecha);
-
-CREATE INDEX idx_preguntas_publicacion
-ON preguntas(id_publicacion);
-
-CREATE INDEX idx_compras_publicacion
-ON compras(id_publicacion);
-
-CREATE INDEX idx_compras_comprador
-ON compras(id_comprador);
-
-CREATE INDEX idx_ofertas_subasta
-ON ofertas(id_subasta);
