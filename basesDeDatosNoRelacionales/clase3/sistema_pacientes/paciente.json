@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "nombre": "María",
+    "apellido": "Gómez",
+    "dni": "35123456",
+    "fecha_nacimiento": "1990-05-15",
+    "telefono": "3415551234",
+    "historia_clinica": 1
+  },
+  {
+    "id": 2,
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "dni": "28987654",
+    "fecha_nacimiento": "1985-08-20",
+    "telefono": "3415556789",
+    "historia_clinica": 2
+  }
+]

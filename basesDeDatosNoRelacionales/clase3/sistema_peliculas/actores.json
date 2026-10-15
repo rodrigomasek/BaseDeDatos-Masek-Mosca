@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "nombre": "Leonardo",
+    "apellido": "DiCaprio",
+    "fecha_nacimiento": "1974-11-11",
+    "nacionalidad": "Estadounidense"
+  },
+  {
+    "id": 2,
+    "nombre": "Kate",
+    "apellido": "Winslet",
+    "fecha_nacimiento": "1975-10-05",
+    "nacionalidad": "Británica"
+  },
+  {
+    "id": 3,
+    "nombre": "Joseph",
+    "apellido": "Gordon-Levitt",
+    "fecha_nacimiento": "1981-02-17",
+    "nacionalidad": "Estadounidense"
+  }
+]

@@ -1,0 +1,51 @@
+{
+  "nombre": "María",
+  "apellido": "Gómez",
+  "email": "maria@gmail.com",
+  "clave": "maria456",
+  "direcciones": [
+    {
+      "calle": "Calle Córdoba 800",
+      "ciudad": "Rosario",
+      "codigo_postal": "S2000",
+      "provincia": "Santa Fe"
+    },
+    {
+      "calle": "Calle San Martín 450",
+      "ciudad": "Rosario",
+      "codigo_postal": "S2000",
+      "provincia": "Santa Fe"
+    }
+  ],
+  "pedidos": [
+    {
+      "id": 1,
+      "fecha": "2026-10-10",
+      "productos": [
+        {
+          "id": 101,
+          "cantidad": 2,
+          "precio_unitario": 1500
+        },
+        {
+          "id": 102,
+          "cantidad": 1,
+          "precio_unitario": 3000
+        }
+      ],
+      "monto_total": 6000
+    },
+    {
+      "id": 2,
+      "fecha": "2026-10-12",
+      "productos": [
+        {
+          "id": 103,
+          "cantidad": 3,
+          "precio_unitario": 2000
+        }
+      ],
+      "monto_total": 6000
+    }
+  ]
+}

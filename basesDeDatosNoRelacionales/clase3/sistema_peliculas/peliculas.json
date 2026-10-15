@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "titulo": "Titanic",
+    "anio": 1997,
+    "genero": "Romance",
+    "duracion": 195,
+    "actores": [1, 2]
+  },
+  {
+    "id": 2,
+    "titulo": "Inception",
+    "anio": 2010,
+    "genero": "Ciencia ficción",
+    "duracion": 148,
+    "actores": [2, 3]
+  }
+]

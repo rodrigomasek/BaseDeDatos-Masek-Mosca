@@ -1,0 +1,25 @@
+{
+  "profesores": [
+    {
+      "id": 1,
+      "nombre": "Juan",
+      "apellido": "Pérez",
+      "email": "juan@gmail.com",
+      "titulo": "Ingeniero en Sistemas"
+    },
+    {
+      "id": 2,
+      "nombre": "María",
+      "apellido": "Gómez",
+      "email": "maria@gmail.com",
+      "titulo": "Licenciada en Informática"
+    },
+    {
+      "id": 3,
+      "nombre": "Carlos",
+      "apellido": "López",
+      "email": "carlos@gmail.com",
+      "titulo": "Analista de Sistemas"
+    }
+  ]
+}

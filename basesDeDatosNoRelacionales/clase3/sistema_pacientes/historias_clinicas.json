@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "numero_historia": "HC001",
+    "fecha_inicio": "2024-03-10",
+    "observaciones_generales": "Paciente con antecedentes de alergia estacional",
+    "registros_medicos": [
+      {
+        "fecha_consulta": "2024-03-10",
+        "diagnostico": "Rinitis alérgica",
+        "tratamiento": "Antihistamínicos",
+        "medico": "Dr. Carlos López"
+      },
+      {
+        "fecha_consulta": "2024-06-15",
+        "diagnostico": "Control de alergia estacional",
+        "tratamiento": "Continuar con el tratamiento indicado",
+        "medico": "Dra. Ana Martínez"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "numero_historia": "HC002",
+    "fecha_inicio": "2023-11-05",
+    "observaciones_generales": "Paciente con antecedentes de hipertensión",
+    "registros_medicos": [
+      {
+        "fecha_consulta": "2023-11-05",
+        "diagnostico": "Hipertensión arterial",
+        "tratamiento": "Control periódico de la presión arterial",
+        "medico": "Dr. Roberto Fernández"
+      },
+      {
+        "fecha_consulta": "2024-02-20",
+        "diagnostico": "Seguimiento de hipertensión arterial",
+        "tratamiento": "Continuar controles periódicos",
+        "medico": "Dr. Roberto Fernández"
+      }
+    ]
+  }
+]
