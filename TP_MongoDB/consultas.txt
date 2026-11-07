@@ -1,0 +1,562 @@
+// ---------------------------------------------------------------------
+// 1. Crear la base de datos y definir las colecciones.
+// ---------------------------------------------------------------------
+use app_restaurantes
+
+// Si la colección ya existía de una corrida anterior, se borra para
+// arrancar de cero.
+db.restaurantes.drop()
+
+db.createCollection("restaurantes")
+
+
+// ---------------------------------------------------------------------
+// 2. Insertar al menos 3 documentos en cada colección, usando
+//    insertOne() e insertMany().
+// ---------------------------------------------------------------------
+
+// Un restaurante con insertOne()
+db.restaurantes.insertOne({
+  nombre: "La Parrilla de Don Tito",
+  tipo_cocina: "Parrilla",
+  informacion: {
+    direccion: "Av. Rivadavia 4520, Caballito, CABA",
+    telefono: "11 4902-1133",
+    horario: { dias: "Martes a domingo", apertura: "12:00", cierre: "00:00" },
+    metodos_pago: ["Efectivo", "Débito", "Crédito", "QR"]
+  },
+  servicios: ["Delivery", "Reservas online", "Estacionamiento", "Pago con QR", "Wi-Fi", "Eventos privados"],
+  menu: [
+    { nombre: "Provoleta", precio: 6500, descripcion: "Provolone a la parrilla con orégano y aceite de oliva", categoria: "Entrada", etiquetas: ["vegetariano", "sin TACC"], observaciones: "" },
+    { nombre: "Bife de chorizo", precio: 18500, descripcion: "Bife de 400 g a la parrilla", categoria: "Plato principal", etiquetas: ["sin TACC"], observaciones: "Con guarnición a elección" },
+    { nombre: "Parrillada para dos", precio: 32000, descripcion: "Asado, vacío, chorizo, morcilla y pollo", categoria: "Plato principal", etiquetas: [], observaciones: "Incluye achuras" },
+    { nombre: "Flan casero", precio: 5200, descripcion: "Flan con dulce de leche y crema", categoria: "Postre", etiquetas: ["vegetariano"], observaciones: "" },
+    { nombre: "Copa de Malbec", precio: 4800, descripcion: "Malbec de Mendoza", categoria: "Bebida", etiquetas: [], observaciones: "Sólo mayores de 18 años" }
+  ],
+  promociones: [
+    { nombre: "Mediodía ejecutivo", porcentaje: 10, fecha_inicio: ISODate("2026-10-01"), fecha_fin: ISODate("2026-12-31") },
+    { nombre: "Descuento jubilados", porcentaje: 15, fecha_inicio: ISODate("2026-06-01"), fecha_fin: ISODate("2026-12-31") },
+    { nombre: "Promo Día del Padre", porcentaje: 25, fecha_inicio: ISODate("2026-06-15"), fecha_fin: ISODate("2026-06-21") }
+  ],
+  resenas: [
+    { email: "lucia.gomez@mail.com", comentario: "El bife espectacular, muy buena atención", calificacion: 5, fecha: ISODate("2026-09-12") },
+    { email: "martin.perez@mail.com", comentario: "Excelente parrillada, volvería", calificacion: 5, fecha: ISODate("2026-10-03") },
+    { email: "sofia.ruiz@mail.com", comentario: "Muy rico pero tardaron bastante", calificacion: 4, fecha: ISODate("2026-10-20") }
+  ],
+  eventos: [
+    { nombre: "Peña folclórica", descripcion: "Guitarreada y empanadas", fecha: ISODate("2026-08-22"), horario: "21:00", requiere_reserva: true },
+    { nombre: "Noche de vinos y asado", descripcion: "Maridaje de cuatro pasos con vinos de Mendoza", fecha: ISODate("2026-11-14"), horario: "21:00", requiere_reserva: true },
+    { nombre: "Degustación de cortes", descripcion: "Cortes especiales explicados por el parrillero", fecha: ISODate("2026-12-05"), horario: "20:00", requiere_reserva: true }
+  ]
+})
+
+// El resto de los restaurantes con insertMany()
+db.restaurantes.insertMany([
+  {
+    nombre: "Trattoria Nonna Rosa",
+    tipo_cocina: "Italiana",
+    informacion: {
+      direccion: "Gorriti 5210, Palermo, CABA",
+      telefono: "11 4831-7720",
+      horario: { dias: "Lunes a sábado", apertura: "12:30", cierre: "23:30" },
+      metodos_pago: ["Efectivo", "Débito", "Crédito"]
+    },
+    servicios: ["Delivery", "Reservas online", "Pago con QR", "Wi-Fi", "Catering"],
+    menu: [
+      { nombre: "Bruschetta", precio: 5800, descripcion: "Pan tostado con tomate, ajo y albahaca", categoria: "Entrada", etiquetas: ["vegano"], observaciones: "" },
+      { nombre: "Sorrentinos de jamón y queso", precio: 14500, descripcion: "Pasta casera con salsa a elección", categoria: "Plato principal", etiquetas: [], observaciones: "Salsa fileto, crema o mixta" },
+      { nombre: "Lasagna de verduras", precio: 13800, descripcion: "Capas de pasta con espinaca, zapallo y ricota", categoria: "Plato principal", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Tiramisú", precio: 6200, descripcion: "Receta tradicional de la nonna", categoria: "Postre", etiquetas: ["vegetariano"], observaciones: "Contiene café" },
+      { nombre: "Limonada con menta", precio: 3500, descripcion: "Jarra de 1 litro", categoria: "Bebida", etiquetas: [], observaciones: "" }
+    ],
+    promociones: [
+      { nombre: "Martes de pastas", porcentaje: 30, fecha_inicio: ISODate("2026-09-01"), fecha_fin: ISODate("2026-12-31") },
+      { nombre: "Pago en efectivo", porcentaje: 10, fecha_inicio: ISODate("2026-01-01"), fecha_fin: ISODate("2026-12-31") },
+      { nombre: "Aniversario", porcentaje: 20, fecha_inicio: ISODate("2026-03-01"), fecha_fin: ISODate("2026-03-31") }
+    ],
+    resenas: [
+      { email: "julian.diaz@mail.com", comentario: "Las mejores pastas de Palermo", calificacion: 5, fecha: ISODate("2026-08-30") },
+      { email: "carla.mendez@mail.com", comentario: "Muy rico, un poco caro", calificacion: 4, fecha: ISODate("2026-09-15") },
+      { email: "tomas.vera@mail.com", comentario: "Buena atención, el tiramisú increíble", calificacion: 4, fecha: ISODate("2026-10-02") },
+      { email: "ana.lopez@mail.com", comentario: "Volvimos por los martes de pastas", calificacion: 5, fecha: ISODate("2026-10-28") }
+    ],
+    eventos: [
+      { nombre: "Noche italiana", descripcion: "Cena show con canciones italianas", fecha: ISODate("2026-10-10"), horario: "21:00", requiere_reserva: true },
+      { nombre: "Clase de pastas caseras", descripcion: "Aprendé a hacer ñoquis y tallarines", fecha: ISODate("2026-11-22"), horario: "18:00", requiere_reserva: true }
+    ]
+  },
+  {
+    nombre: "Sakura Sushi Bar",
+    tipo_cocina: "Japonesa",
+    informacion: {
+      direccion: "Av. Cabildo 2145, Belgrano, CABA",
+      telefono: "11 4788-3021",
+      horario: { dias: "Todos los días", apertura: "12:00", cierre: "23:00" },
+      metodos_pago: ["Débito", "Crédito", "QR"]
+    },
+    servicios: ["Delivery", "Pago con QR", "Wi-Fi", "Opciones sin TACC"],
+    menu: [
+      { nombre: "Edamame", precio: 4200, descripcion: "Porotos de soja al vapor con sal marina", categoria: "Entrada", etiquetas: ["vegano", "sin TACC"], observaciones: "" },
+      { nombre: "Combinado 15 piezas", precio: 21000, descripcion: "Rolls, nigiris y sashimi variados", categoria: "Plato principal", etiquetas: [], observaciones: "La salsa de soja común contiene gluten" },
+      { nombre: "Roll vegetariano", precio: 9800, descripcion: "Palta, pepino y queso crema", categoria: "Plato principal", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Sashimi de salmón", precio: 16500, descripcion: "Diez cortes de salmón rosado", categoria: "Plato principal", etiquetas: ["sin TACC"], observaciones: "Se sirve con salsa de soja sin gluten" },
+      { nombre: "Mochi de té verde", precio: 4900, descripcion: "Dos unidades", categoria: "Postre", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Té verde", precio: 2500, descripcion: "Tetera para uno", categoria: "Bebida", etiquetas: [], observaciones: "" }
+    ],
+    promociones: [
+      { nombre: "Sushi libre de lunes", porcentaje: 35, fecha_inicio: ISODate("2026-10-15"), fecha_fin: ISODate("2026-11-30") },
+      { nombre: "Descuento estudiantes", porcentaje: 15, fecha_inicio: ISODate("2026-08-01"), fecha_fin: ISODate("2026-12-15") }
+    ],
+    resenas: [
+      { email: "nico.fernandez@mail.com", comentario: "Buen sushi, el salmón muy fresco", calificacion: 4, fecha: ISODate("2026-09-05") },
+      { email: "valen.sosa@mail.com", comentario: "El delivery llegó frío", calificacion: 3, fecha: ISODate("2026-09-28") },
+      { email: "pilar.castro@mail.com", comentario: "Tienen opciones sin TACC de verdad, gracias!", calificacion: 5, fecha: ISODate("2026-10-17") }
+    ],
+    eventos: [
+      { nombre: "Degustación de sake", descripcion: "Cinco variedades de sake japonés", fecha: ISODate("2026-11-08"), horario: "20:30", requiere_reserva: true },
+      { nombre: "Clase de sushi", descripcion: "Armá tus propios rolls con el chef", fecha: ISODate("2026-12-13"), horario: "17:00", requiere_reserva: true }
+    ]
+  },
+  {
+    nombre: "Verde Raíz",
+    tipo_cocina: "Vegana",
+    informacion: {
+      direccion: "Thames 1678, Palermo, CABA",
+      telefono: "11 4776-5590",
+      horario: { dias: "Martes a domingo", apertura: "10:00", cierre: "22:00" },
+      metodos_pago: ["Efectivo", "Débito", "QR", "Transferencia"]
+    },
+    servicios: ["Reservas online", "Pago con QR", "Wi-Fi", "Opciones veganas", "Opciones sin TACC"],
+    menu: [
+      { nombre: "Hummus con vegetales", precio: 5600, descripcion: "Hummus de garbanzos con bastones de zanahoria y apio", categoria: "Entrada", etiquetas: ["vegano", "sin TACC"], observaciones: "" },
+      { nombre: "Bowl de quinoa", precio: 11200, descripcion: "Quinoa, palta, garbanzos y vegetales asados", categoria: "Plato principal", etiquetas: ["vegano", "sin TACC"], observaciones: "" },
+      { nombre: "Hamburguesa de lentejas", precio: 10400, descripcion: "En pan de semillas con papas rústicas", categoria: "Plato principal", etiquetas: ["vegano"], observaciones: "El pan contiene gluten" },
+      { nombre: "Brownie vegano", precio: 4800, descripcion: "Con nueces y cacao amargo", categoria: "Postre", etiquetas: ["vegano"], observaciones: "" },
+      { nombre: "Jugo verde", precio: 4200, descripcion: "Manzana, espinaca, jengibre y limón", categoria: "Bebida", etiquetas: ["vegano", "sin TACC"], observaciones: "" }
+    ],
+    // Sin promociones: el campo existe pero está vacío
+    promociones: [],
+    resenas: [
+      { email: "maria.ortiz@mail.com", comentario: "Todo riquísimo y súper fresco", calificacion: 5, fecha: ISODate("2026-08-18") },
+      { email: "diego.rios@mail.com", comentario: "No soy vegano y me encantó", calificacion: 5, fecha: ISODate("2026-09-09") },
+      { email: "camila.paz@mail.com", comentario: "El bowl de quinoa es lo mejor", calificacion: 5, fecha: ISODate("2026-10-01") },
+      { email: "bruno.silva@mail.com", comentario: "Muy bueno, el local es chico", calificacion: 4, fecha: ISODate("2026-10-25") }
+    ],
+    eventos: [
+      { nombre: "Feria orgánica", descripcion: "Productores locales en la vereda", fecha: ISODate("2026-09-20"), horario: "10:00", requiere_reserva: false },
+      { nombre: "Taller de cocina vegana", descripcion: "Reemplazos del huevo y la leche", fecha: ISODate("2026-11-29"), horario: "11:00", requiere_reserva: true }
+    ]
+  },
+  {
+    nombre: "El Bodegón de Boedo",
+    tipo_cocina: "Bodegón",
+    informacion: {
+      direccion: "Av. Boedo 912, Boedo, CABA",
+      telefono: "11 4931-4467",
+      horario: { dias: "Todos los días", apertura: "12:00", cierre: "01:00" },
+      metodos_pago: ["Efectivo", "Débito"]
+    },
+    servicios: ["Estacionamiento", "Pago con QR", "Eventos privados", "Shows en vivo"],
+    menu: [
+      { nombre: "Matambre a la pizza", precio: 9500, descripcion: "Con salsa de tomate, muzzarella y orégano", categoria: "Entrada", etiquetas: [], observaciones: "Para compartir" },
+      { nombre: "Milanesa napolitana", precio: 16800, descripcion: "Con papas fritas", categoria: "Plato principal", etiquetas: [], observaciones: "Porción abundante" },
+      { nombre: "Ravioles con tuco", precio: 12900, descripcion: "Ravioles de verdura caseros", categoria: "Plato principal", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Panqueque con dulce de leche", precio: 4500, descripcion: "Flambeado al ron", categoria: "Postre", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Jarra de vino de la casa", precio: 6000, descripcion: "1 litro, tinto o blanco", categoria: "Bebida", etiquetas: [], observaciones: "Sólo mayores de 18 años" }
+    ],
+    // Sin promociones: el campo directamente no existe
+    resenas: [
+      { email: "jorge.acosta@mail.com", comentario: "Porciones enormes, como antes", calificacion: 4, fecha: ISODate("2026-08-25") },
+      { email: "laura.benitez@mail.com", comentario: "Rico y barato", calificacion: 4, fecha: ISODate("2026-09-30") },
+      { email: "pablo.moreno@mail.com", comentario: "Mucho ruido los viernes", calificacion: 3, fecha: ISODate("2026-10-11") }
+    ],
+    eventos: [
+      { nombre: "Noche de bodegón", descripcion: "Menú especial de platos de la abuela", fecha: ISODate("2026-10-24"), horario: "21:00", requiere_reserva: false },
+      { nombre: "Música en vivo", descripcion: "Tango y folclore en vivo", fecha: ISODate("2026-11-07"), horario: "21:30", requiere_reserva: false }
+    ]
+  },
+  {
+    nombre: "Taquería El Charro",
+    tipo_cocina: "Mexicana",
+    informacion: {
+      direccion: "Av. Corrientes 3890, Almagro, CABA",
+      telefono: "11 4862-2209",
+      horario: { dias: "Miércoles a domingo", apertura: "19:00", cierre: "02:00" },
+      metodos_pago: ["Efectivo", "Crédito", "QR"]
+    },
+    servicios: ["Delivery", "Reservas online", "Pago con QR", "Wi-Fi", "Shows en vivo"],
+    menu: [
+      { nombre: "Guacamole con totopos", precio: 6800, descripcion: "Palta, tomate, cebolla y cilantro", categoria: "Entrada", etiquetas: ["vegano", "sin TACC"], observaciones: "Totopos de maíz" },
+      { nombre: "Tacos al pastor", precio: 9900, descripcion: "Tres tacos de cerdo marinado con ananá", categoria: "Plato principal", etiquetas: [], observaciones: "Picante medio" },
+      { nombre: "Burrito de carne", precio: 11500, descripcion: "Carne, porotos, arroz y queso", categoria: "Plato principal", etiquetas: [], observaciones: "" },
+      { nombre: "Quesadilla vegetariana", precio: 8700, descripcion: "Queso, morrón y champiñones", categoria: "Plato principal", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Churros con chocolate", precio: 4600, descripcion: "Seis churros con chocolate caliente", categoria: "Postre", etiquetas: ["vegetariano"], observaciones: "" },
+      { nombre: "Margarita", precio: 6500, descripcion: "Tequila, triple sec y lima", categoria: "Bebida", etiquetas: [], observaciones: "Sólo mayores de 18 años" }
+    ],
+    promociones: [
+      { nombre: "Noche de tacos", porcentaje: 25, fecha_inicio: ISODate("2026-10-01"), fecha_fin: ISODate("2026-12-31") },
+      { nombre: "Happy hour", porcentaje: 10, fecha_inicio: ISODate("2026-07-01"), fecha_fin: ISODate("2026-12-31") },
+      { nombre: "Cinco de Mayo", porcentaje: 30, fecha_inicio: ISODate("2026-05-01"), fecha_fin: ISODate("2026-05-05") }
+    ],
+    resenas: [
+      { email: "fede.torres@mail.com", comentario: "Los tacos están bien pero esperaba más", calificacion: 3, fecha: ISODate("2026-09-03") },
+      { email: "romina.gil@mail.com", comentario: "Buena música y buenas margaritas", calificacion: 4, fecha: ISODate("2026-09-26") },
+      { email: "kevin.ramos@mail.com", comentario: "Demasiado picante para mí", calificacion: 3, fecha: ISODate("2026-10-19") }
+    ],
+    eventos: [
+      { nombre: "Happy hour", descripcion: "2x1 en margaritas de 18 a 20 hs", fecha: ISODate("2026-11-05"), horario: "18:00", requiere_reserva: false },
+      { nombre: "Música en vivo", descripcion: "Mariachis en vivo", fecha: ISODate("2026-11-21"), horario: "22:00", requiere_reserva: false }
+    ]
+  },
+  {
+    nombre: "Café Almendra",
+    tipo_cocina: "Cafetería",
+    informacion: {
+      direccion: "Av. Rivadavia 6950, Flores, CABA",
+      telefono: "11 4611-0384",
+      horario: { dias: "Lunes a sábado", apertura: "08:00", cierre: "20:00" },
+      metodos_pago: ["Efectivo", "QR"]
+    },
+    servicios: ["Wi-Fi", "Pago con QR", "Estacionamiento"],
+    // Todavía no cargó su menú: el campo existe pero está vacío
+    menu: [],
+    promociones: [
+      { nombre: "Merienda de otoño", porcentaje: 20, fecha_inicio: ISODate("2026-04-01"), fecha_fin: ISODate("2026-06-20") }
+    ],
+    resenas: [
+      { email: "eli.navarro@mail.com", comentario: "Lindo lugar para estudiar", calificacion: 4, fecha: ISODate("2026-09-14") },
+      { email: "gaston.ibarra@mail.com", comentario: "El café estaba frío", calificacion: 3, fecha: ISODate("2026-10-08") }
+    ],
+    eventos: [
+      { nombre: "Clase de barismo", descripcion: "Aprendé a hacer latte art", fecha: ISODate("2026-11-15"), horario: "10:00", requiere_reserva: true }
+    ]
+  },
+  {
+    nombre: "Burger Station",
+    tipo_cocina: "Hamburguesas",
+    informacion: {
+      direccion: "Av. Santa Fe 1520, Recoleta, CABA",
+      telefono: "11 4813-9902",
+      horario: { dias: "Todos los días", apertura: "11:00", cierre: "23:59" },
+      metodos_pago: ["Débito", "Crédito", "QR"]
+    },
+    servicios: ["Delivery", "Catering"],
+    // Sin menú: el campo directamente no existe
+    promociones: [
+      { nombre: "Burger day", porcentaje: 15, fecha_inicio: ISODate("2026-10-01"), fecha_fin: ISODate("2026-11-30") }
+    ],
+    resenas: [
+      { email: "lucas.medina@mail.com", comentario: "La hamburguesa llegó desarmada", calificacion: 2, fecha: ISODate("2026-09-20") },
+      { email: "flor.aguirre@mail.com", comentario: "Normal, nada especial", calificacion: 3, fecha: ISODate("2026-10-05") },
+      { email: "ivan.cabrera@mail.com", comentario: "Muy buenas las papas", calificacion: 4, fecha: ISODate("2026-10-30") }
+    ]
+    // Sin eventos
+  }
+])
+
+// Control: tienen que ser 8 restaurantes
+db.restaurantes.countDocuments()
+
+
+// ---------------------------------------------------------------------
+// 3. Agregar un campo "ultima_actualizacion" con la fecha actual a todos
+//    los documentos de restaurantes. Siempre que se actualice el
+//    documento se debe setear ese valor con la fecha actual.
+// ---------------------------------------------------------------------
+// $currentDate pone la fecha y hora actual del servidor. Por eso, en
+// TODAS las consultas que modifican un restaurante (la 6 y la 8) se
+// vuelve a usar $currentDate sobre este mismo campo.
+db.restaurantes.updateMany(
+  {},
+  { $currentDate: { ultima_actualizacion: true } }
+)
+
+
+// ---------------------------------------------------------------------
+// 4. Mostrar el nombre de los restaurantes que cuentan con alguna
+//    promoción del 10%.
+// ---------------------------------------------------------------------
+db.restaurantes.find(
+  { "promociones.porcentaje": 10 },
+  { _id: 0, nombre: 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 5. Mostrar el promedio de calificación de las reseñas de cada
+//    restaurante.
+// ---------------------------------------------------------------------
+db.restaurantes.aggregate([
+  { $project: {
+      _id: 0,
+      nombre: 1,
+      promedio_calificacion: { $round: [ { $avg: "$resenas.calificacion" }, 2 ] }
+  } }
+])
+
+
+// ---------------------------------------------------------------------
+// 6. Modificar el horario de apertura a las 11:30hs para los
+//    restaurantes que tienen delivery o reservas online.
+// ---------------------------------------------------------------------
+db.restaurantes.updateMany(
+  { servicios: { $in: ["Delivery", "Reservas online"] } },
+  {
+    $set: { "informacion.horario.apertura": "11:30" },
+    $currentDate: { ultima_actualizacion: true }
+  }
+)
+
+// Control: cómo quedó el horario de apertura de cada uno
+db.restaurantes.find(
+  {},
+  { _id: 0, nombre: 1, "informacion.horario.apertura": 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 7. Mostrar el nombre, dirección y teléfono de los restaurantes que
+//    tengan como evento especial "Música en vivo".
+// ---------------------------------------------------------------------
+db.restaurantes.find(
+  { "eventos.nombre": "Música en vivo" },
+  { _id: 0, nombre: 1, "informacion.direccion": 1, "informacion.telefono": 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 8. Agregar una promoción que inicie el 2026-09-10 y termine el
+//    2026-10-10. Elegir un restaurante al azar.
+// ---------------------------------------------------------------------
+// $sample elige un documento al azar de la colección.
+var elegido = db.restaurantes.aggregate([ { $sample: { size: 1 } } ]).toArray()[0]
+
+db.restaurantes.updateOne(
+  { _id: elegido._id },
+  {
+    $push: { promociones: {
+      nombre: "Promo primavera",
+      porcentaje: 20,
+      fecha_inicio: ISODate("2026-09-10"),
+      fecha_fin: ISODate("2026-10-10")
+    } },
+    $currentDate: { ultima_actualizacion: true }
+  }
+)
+
+// Control: a qué restaurante le tocó y cómo quedaron sus promociones
+db.restaurantes.find(
+  { _id: elegido._id },
+  { _id: 0, nombre: 1, promociones: 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 9. Mostrar el nombre del restaurante, sus servicios adicionales y menú
+//    para aquel que posea el máximo descuento para el día de hoy.
+// ---------------------------------------------------------------------
+// Una promoción vale "hoy" si ya empezó y todavía no terminó.
+db.restaurantes.aggregate([
+  { $unwind: "$promociones" },
+  { $match: {
+      "promociones.fecha_inicio": { $lte: new Date() },
+      "promociones.fecha_fin":    { $gte: new Date() }
+  } },
+  { $sort: { "promociones.porcentaje": -1 } },
+  { $limit: 1 },
+  { $project: {
+      _id: 0,
+      nombre: 1,
+      descuento: "$promociones",
+      servicios: 1,
+      menu: 1
+  } }
+])
+
+
+// ---------------------------------------------------------------------
+// 10. Listar el nombre de los 3 restaurantes que tienen la mejor
+//     calificación promedio.
+// ---------------------------------------------------------------------
+db.restaurantes.aggregate([
+  { $project: {
+      _id: 0,
+      nombre: 1,
+      promedio_calificacion: { $round: [ { $avg: "$resenas.calificacion" }, 2 ] }
+  } },
+  { $sort: { promedio_calificacion: -1 } },
+  { $limit: 3 }
+])
+
+
+// ---------------------------------------------------------------------
+// 11. Mostrar los restaurantes que tengan descuento para jubilados o
+//     para estudiantes.
+// ---------------------------------------------------------------------
+// La "i" de la expresión regular hace que no importen las mayúsculas.
+db.restaurantes.find(
+  { "promociones.nombre": { $regex: /jubilad|estudiant/i } },
+  { _id: 0, nombre: 1, "promociones.nombre": 1, "promociones.porcentaje": 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 12. Mostrar los restaurantes que tengan delivery, reservas online y
+//     además alguna promoción vigente mayor al 20%.
+// ---------------------------------------------------------------------
+// $all exige los dos servicios a la vez.
+// $elemMatch exige que UNA MISMA promoción sea mayor al 20% Y esté
+// vigente. Sin $elemMatch, un restaurante con una promo vencida del 25%
+// y otra vigente del 10% aparecería por error.
+db.restaurantes.find(
+  {
+    servicios: { $all: ["Delivery", "Reservas online"] },
+    promociones: { $elemMatch: {
+      porcentaje:   { $gt: 20 },
+      fecha_inicio: { $lte: new Date() },
+      fecha_fin:    { $gte: new Date() }
+    } }
+  },
+  { _id: 0, nombre: 1, servicios: 1, promociones: 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 13. Mostrar los 3 servicios adicionales más comunes ofrecidos por los
+//     restaurantes en general.
+// ---------------------------------------------------------------------
+db.restaurantes.aggregate([
+  { $unwind: "$servicios" },
+  { $group: { _id: "$servicios", cantidad_restaurantes: { $sum: 1 } } },
+  { $sort: { cantidad_restaurantes: -1 } },
+  { $limit: 3 }
+])
+
+
+// ---------------------------------------------------------------------
+// 14. Mostrar todos los restaurantes (nombre, dirección y teléfono) que
+//     no tengan promociones.
+// ---------------------------------------------------------------------
+// "No tener promociones" son dos casos: que el campo no exista, o que
+// exista pero la lista esté vacía.
+db.restaurantes.find(
+  { $or: [
+      { promociones: { $exists: false } },
+      { promociones: { $size: 0 } }
+  ] },
+  { _id: 0, nombre: 1, "informacion.direccion": 1, "informacion.telefono": 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 15. Mostrar todos los restaurantes (nombre, dirección y teléfono) que
+//     tienen, al menos, tres promociones.
+// ---------------------------------------------------------------------
+// "promociones.2" es la TERCERA promoción (la lista empieza en 0): si
+// existe, el restaurante tiene 3 o más.
+db.restaurantes.find(
+  { "promociones.2": { $exists: true } },
+  { _id: 0, nombre: 1, "informacion.direccion": 1, "informacion.telefono": 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 16. Mostrar todos los restaurantes que tengan en su menú un plato
+//     "sin TACC".
+// ---------------------------------------------------------------------
+db.restaurantes.find(
+  { "menu.etiquetas": "sin TACC" },
+  { _id: 0, nombre: 1 }
+)
+
+
+// ---------------------------------------------------------------------
+// 17. Mostrar los restaurantes con sus promociones vigentes al día de
+//     hoy.
+// ---------------------------------------------------------------------
+// $filter se queda solo con las promociones vigentes de cada
+// restaurante ($$NOW es la fecha y hora actual). Después se descartan
+// los restaurantes que no tienen ninguna vigente.
+db.restaurantes.aggregate([
+  { $project: {
+      _id: 0,
+      nombre: 1,
+      promociones_vigentes: { $filter: {
+        input: "$promociones",
+        as: "promo",
+        cond: { $and: [
+          { $lte: [ "$$promo.fecha_inicio", "$$NOW" ] },
+          { $gte: [ "$$promo.fecha_fin", "$$NOW" ] }
+        ] }
+      } }
+  } },
+  { $match: { "promociones_vigentes.0": { $exists: true } } }
+])
+
+
+// ---------------------------------------------------------------------
+// 18. Mostrar el evento más próximo a realizarse de cada restaurante.
+// ---------------------------------------------------------------------
+// Se queda con los eventos que todavía no pasaron, los ordena por fecha
+// y toma el primero de cada restaurante.
+db.restaurantes.aggregate([
+  { $unwind: "$eventos" },
+  { $match: { "eventos.fecha": { $gte: new Date() } } },
+  { $sort: { "eventos.fecha": 1 } },
+  { $group: {
+      _id: "$_id",
+      restaurante: { $first: "$nombre" },
+      proximo_evento: { $first: "$eventos" }
+  } },
+  { $sort: { "proximo_evento.fecha": 1 } },
+  { $project: { _id: 0, restaurante: 1, proximo_evento: 1 } }
+])
+
+
+// ---------------------------------------------------------------------
+// 19. Borrar todos los documentos de la colección de restaurantes que
+//     no tengan menú. Tener en cuenta tanto los casos en los que existe
+//     como en los que no existe el campo.
+// ---------------------------------------------------------------------
+// Control previo: cuáles se van a borrar
+db.restaurantes.find(
+  { $or: [
+      { menu: { $exists: false } },
+      { menu: { $size: 0 } }
+  ] },
+  { _id: 0, nombre: 1 }
+)
+
+db.restaurantes.deleteMany(
+  { $or: [
+      { menu: { $exists: false } },
+      { menu: { $size: 0 } }
+  ] }
+)
+
+
+// ---------------------------------------------------------------------
+// 20. Mostrar el precio promedio, el plato más caro y el plato más
+//     barato del menú de cada restaurante.
+// ---------------------------------------------------------------------
+// Se ordenan los platos de cada restaurante de más barato a más caro:
+// el primero ($first) es el más barato y el último ($last) el más caro.
+db.restaurantes.aggregate([
+  { $unwind: "$menu" },
+  { $sort: { "menu.precio": 1 } },
+  { $group: {
+      _id: "$_id",
+      restaurante: { $first: "$nombre" },
+      precio_promedio: { $avg: "$menu.precio" },
+      plato_mas_barato: { $first: { nombre: "$menu.nombre", precio: "$menu.precio" } },
+      plato_mas_caro: { $last: { nombre: "$menu.nombre", precio: "$menu.precio" } }
+  } },
+  { $project: {
+      _id: 0,
+      restaurante: 1,
+      precio_promedio: { $round: [ "$precio_promedio", 2 ] },
+      plato_mas_barato: 1,
+      plato_mas_caro: 1
+  } },
+  { $sort: { restaurante: 1 } }
+])
